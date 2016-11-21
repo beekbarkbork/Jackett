@@ -114,7 +114,7 @@ namespace Jackett.Indexers
         {
             public int After { get; set; }
             //public string Remove { get; set; } // already inherited
-            public string Dateheaders { get; set; }
+            public selectorBlock Dateheaders { get; set; }
         }
 
         public CardigannIndexer(IIndexerManagerService i, IWebClient wc, Logger l, IProtectionService ps)
@@ -645,7 +645,35 @@ namespace Jackett.Indexers
                 var SearchResultParser = new HtmlParser();
                 var SearchResultDocument = SearchResultParser.Parse(results);
                 
-                var Rows = SearchResultDocument.QuerySelectorAll(Search.Rows.Selector);
+                var RowsDom = SearchResultDocument.QuerySelectorAll(Search.Rows.Selector);
+                List<IElement> Rows = new List<IElement>();
+                foreach (var RowDom in RowsDom)
+                {
+                    Rows.Add(RowDom);
+                }
+
+                // merge following rows for After selector
+                var After = Definition.Search.Rows.After;
+                if (After > 0)
+                {
+                    for (int i = 0; i < Rows.Count; i += 1)
+                    {
+                        var CurrentRow = Rows[i];
+                        for (int j = 0; j < After; j += 1)
+                        {
+                            var MergeRowIndex = i + j + 1;
+                            var MergeRow = Rows[MergeRowIndex];
+                            List<INode> MergeNodes = new List<INode>();
+                            foreach (var node in MergeRow.QuerySelectorAll("td"))
+                            {
+                                MergeNodes.Add(node);
+                            }
+                            CurrentRow.Append(MergeNodes.ToArray());
+                        }
+                        Rows.RemoveRange(i + 1, After);
+                    }
+                }
+
                 foreach (var Row in Rows)
                 {
                     try
@@ -726,6 +754,32 @@ namespace Jackett.Indexers
                             {
                                 throw new Exception(string.Format("Error while parsing field={0}, selector={1}, value={2}: {3}", Field.Key, Field.Value.Selector, value, ex.Message));
                             }
+                        }
+
+                        // if DateHeaders is set go through the previous rows and look for the header selector
+                        var DateHeaders = Definition.Search.Rows.Dateheaders;
+                        if (DateHeaders != null)
+                        {
+                            var PrevRow = Row.PreviousElementSibling;
+                            string value = null;
+                            while (PrevRow != null)
+                            {
+                                try
+                                {
+                                    value = handleSelector(DateHeaders, PrevRow);
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    // do nothing
+                                }
+                                PrevRow = PrevRow.PreviousElementSibling;
+                            }
+                            
+                            if (value == null)
+                                throw new Exception(string.Format("No date header row found for {0}", release.ToString()));
+
+                            release.PublishDate = DateTimeUtil.FromUnknown(value);
                         }
 
                         releases.Add(release);

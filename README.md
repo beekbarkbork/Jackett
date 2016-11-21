@@ -28,12 +28,12 @@ Developer note: The software implements the [Torznab](https://github.com/Sonarr/
  * BIT-HDTV
  * BitMeTV
  * BitSoup
- * BlueTigers
  * BTN
  * CinemaZ
  * DanishBits
  * Demonoid
  * DigitalHive
+ * EoT-Forum
  * FileList
  * Freshon
  * FunFile
@@ -65,6 +65,7 @@ Developer note: The software implements the [Torznab](https://github.com/Sonarr/
  * Shareisland
  * Shazbat
  * SpeedCD
+ * The Horror Charnel
  * The New Retro
  * TehConnection
  * Torrent Network
@@ -76,8 +77,10 @@ Developer note: The software implements the [Torznab](https://github.com/Sonarr/
  * TorrentShack
  * Torrent-Syndikat
  * TransmitheNet
+ * Tspate
  * TV Chaos UK
  * TV-Vault
+ * UHDBits
  * World-In-HD
  * WorldOfP2P
  * x264
